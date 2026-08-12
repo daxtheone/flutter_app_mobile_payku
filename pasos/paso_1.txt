@@ -1,0 +1,213 @@
+0.  Colocar buen nombre al proyecto ejemplo
+
+
+    com.payku.dashboard.v0
+    com.payku.app.v0
+    com.comediaticket.app.v0
+
+    Luego creamos el nombre visible mas acorde
+
+        android/app/src/main/AndroidManifest.xml
+            android:label="payku"
+
+        ios/Runner/Info.plist
+
+            <key>CFBundleName</key>
+            <string>Payku</string>  <!-- Cambia esto -->
+            <key>CFBundleDisplayName</key>
+            <string>Payku</string>  <!-- Cambia esto también -->
+
+
+        Luego
+            flutter clean
+            flutter pub get
+            flutter run
+0.1  actualizamos el git ignore a uno mas completo
+
+
+1. Inicializamos nuestro repositorio GIT y GIT FLOW
+    git init
+    git flow init
+
+2. Actualizamos a la ultima versión de Flutter y Dart
+    flutter --version
+    flutter channel stable
+    flutter upgrade
+    flutter clean
+    flutter pub get
+
+3. instalamos los siguientes paquetes que utilizaremos https://pub.dev/
+
+    3.1 ) google_fonts
+        assets:
+            - assets/loaders/
+            - assets/images/
+            - google_fonts/montserrat_alternates/
+            - .env
+        // Nota: en la raiz Creo la carpeta google_fonts/montserrat_alternates con el listado de archivos de la fuente
+    3.2 ) go_router
+    3.3 ) flutter_dotenv
+            // Nota:  Creamos el archivo .env (agregarlo del .gitignore) y .env.template
+            API_URL=http://localhost:3000/api    (Ruta del backend)
+    3.4 ) dio
+    3.5 ) flutter_riverpod
+    3.6 ) shared_preferences
+    3.7 ) formz   -> para crear inputs personalizados
+    3.8 ) lottie (este para hacer animaciones)
+    3.9 ) flutter_bloc
+    3.10 ) equatable
+
+
+4. Creo la carpeta assets/images  y assets/loaders
+
+    en assets/images   tenemos un imagen de internet cualquier no-image.jpg
+    en assets/loaders  ponemos un imagen gif de carga
+
+5) Creamos nuestro sistema de ficheros
+
+    5.1 ) /lib/config
+
+        5.1.1 ) /lib/config/constants/environment.dart
+            class Environment {
+              static initEnvironment() async {
+                await dotenv.load(fileName: '.env');
+              }
+              static String apiUrl = dotenv.env['API_URL'] ?? 'No está configurado el API_URL';
+            }
+
+        5.1.2 ) /lib/config/theme/app_theme.dart
+
+            import 'package:flutter/material.dart';
+            import 'package:google_fonts/google_fonts.dart';
+
+            const colorSeed = Color(0xff424CB8);
+            const scaffoldBackgroundColor = Color(0xFFF8F7F7);
+
+            class AppTheme {
+              ThemeData getTheme() => ThemeData(
+                useMaterial3: true,
+                colorSchemeSeed: colorSeed,
+                textTheme: TextTheme(
+                  titleLarge: GoogleFonts.montserratAlternates().copyWith(
+                    fontSize: 40, fontWeight: FontWeight.bold
+                  ),
+                  titleMedium: GoogleFonts.montserratAlternates().copyWith(fontSize: 30, fontWeight: FontWeight.bold),
+                  titleSmall: GoogleFonts.montserratAlternates().copyWith(fontSize: 20)
+                ),
+                scaffoldBackgroundColor: scaffoldBackgroundColor,
+                filledButtonTheme: FilledButtonThemeData(
+                  style: ButtonStyle(
+                    textStyle: WidgetStatePropertyAll(
+                      GoogleFonts.montserratAlternates().copyWith(fontWeight: FontWeight.w700)
+                    )
+                  )
+                ),
+                appBarTheme: AppBarTheme(
+                  backgroundColor:scaffoldBackgroundColor,
+                  titleTextStyle: GoogleFonts.montserratAlternates().copyWith(fontSize: 25, fontWeight: FontWeight.bold, color: Colors.black),
+                )
+              );
+            }
+
+        5.1.3 ) /lib/config/router/app_router.dart
+
+            import 'package:go_router/go_router.dart';
+
+            final appRouter = GoRouter(initialLocation: '/login', routes: []);
+
+        5.1.4 ) /lib/config/config.dart   <- Archivo de Barril
+
+            export 'constants/environment.dart';
+            export 'router/app_router.dart';
+            export 'theme/app_theme
+
+    5.2 ) /lib/features. <- Creamos la carpeta features
+
+        5.2.1 ) Editamos el main.dart
+
+            import 'package:flutter/material.dart';
+            import 'package:flutter_riverpod/flutter_riverpod.dart';
+            import 'config/config.dart';
+
+            void main() async{
+              await Environment.initEnvironment();
+              runApp( ProviderScope(child: MainApp()));
+            }
+
+            class MainApp extends StatelessWidget {
+              const MainApp({super.key});
+
+              @override
+              Widget build(BuildContext context) {
+                return MaterialApp.router(
+                  routerConfig: appRouter,
+                  theme: AppTheme().getTheme(),
+                  debugShowCheckedModeBanner: false,
+                );
+              }
+            }
+        5.2.2) creamos 2 vistas temporales para probar
+            /lib/features/screem_test1.dart
+            /lib/features/screem_test2.dart
+
+
+                import 'package:flutter/material.dart';
+                import 'package:go_router/go_router.dart';
+
+                class ScreemTest1 extends StatelessWidget {
+                  const ScreemTest1({super.key});
+
+                  @override
+                  Widget build(BuildContext context) {
+                    return
+                        Scaffold(
+                          body: Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text('Prueba Screem 1'),
+                                TextButton(onPressed: ()=> context.push('/screem2'), child: const Text('Cliquea aquí ir al Screem'))
+                              ],
+                            ),
+                          ),
+                        );
+                  }
+                }
+
+    5.3 ) Volvemos a configurar nuestro /lib/config/router/app_router.dart para agregar las rutas
+
+        final appRouter = GoRouter(
+          initialLocation: '/login',
+          routes: [
+            GoRoute(path: '/', builder: (context, state) => const ScreemTest1()),
+            GoRoute(path: '/screem1', builder: (context, state) => const ScreemTest1()),
+            GoRoute(path: '/screem2', builder: (context, state) => const ScreemTest2()),
+          ],
+        );
+
+    5.4 ) Seguimos creamos nuestra estructura de archivos /lib/features/shared
+        5.4.1 ) /lib/features/shared/services/services.dart
+        5.4.2 ) /lib/features/shared/widgets/widgets.dart
+            5.4.2.1 ) /lib/features/shared/widgets/custom_input.dart
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
