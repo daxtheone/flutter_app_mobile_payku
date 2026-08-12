@@ -1,0 +1,494 @@
+Vamos a customizar los inputs
+
+
+0.  Creamos el directorio
+
+    lib/features/shared/widgets/inputs/
+        inputs.dart
+        password_input.dart
+        username_input.dart
+
+
+1. creamos el archivo password_input.dart
+
+        import 'package:formz/formz.dart';
+
+        // Define input validation errors
+        enum PasswordInputError { empty, length }
+
+        // Extend FormzInput and provide the input type and error type.
+        class PasswordInput extends FormzInput<String, PasswordInputError> {
+          // Call super.pure to represent an unmodified form input.
+          const PasswordInput.pure() : super.pure('');
+
+          // Call super.dirty to represent a modified form input.
+          const PasswordInput.dirty(String value) : super.dirty(value);
+
+          String? get errorMessage {
+            if (isValid || isPure) return null;
+            if ( displayError == PasswordInputError.empty ) return 'El Password es requerido';
+            if ( displayError == PasswordInputError.length ) return 'Mínimo 4 caracteres';
+            return null;
+          }
+          // Override validator to handle validating a given input value.
+          @override
+          PasswordInputError? validator(String value) {
+            if(value.trim().isEmpty) return PasswordInputError.empty;
+            if(value.length<4) return PasswordInputError.length;
+            return null;
+          }
+        }
+
+2. creamos el archivo username_input.dart
+
+
+        import 'package:formz/formz.dart';
+
+        // Define input validation errors
+        enum UsernameInputError { empty, length, format }
+
+        // Extend FormzInput and provide the input type and error type.
+        class UsernameInput extends FormzInput<String, UsernameInputError> {
+          // Call super.pure to represent an unmodified form input.
+          const UsernameInput.pure() : super.pure('');
+
+          // Call super.dirty to represent a modified form input.
+          const UsernameInput.dirty(String value) : super.dirty(value);
+
+          String? get errorMessage {
+            if (isValid || isPure) return null;
+            if ( displayError == UsernameInputError.empty ) return 'El mail es requerido';
+            if ( displayError == UsernameInputError.length ) return 'Mínimo 4 caracteres';
+            if ( displayError == UsernameInputError.format ) return 'No tiene formato email válido';
+            return null;
+          }
+
+
+          // Override validator to handle validating a given input value.
+          @override
+          UsernameInputError? validator(String value) {
+
+            if(value.trim().isEmpty) return UsernameInputError.empty;
+            if(value.length<4) return UsernameInputError.length;
+            final emailExpReg = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+            if(!emailExpReg.hasMatch(value)) return UsernameInputError.format;
+            return null;
+          }
+        }
+
+
+3. creamos el archivo barril inputs.dart
+
+
+    export 'username_input.dart';
+    export 'password_input.dart';
+
+
+4) cremamos el archivo features/shared/widgets/custom_text_form_field.dart
+
+        import 'package:flutter/material.dart';
+
+        class CustomTextFormField extends StatelessWidget {
+          final String? label;
+          final String? hint;
+          final bool obscureText;
+          final String? errorMessage;
+          final Function(String)? onChaged;
+          final String? Function(String?)? validator;
+
+
+          const CustomTextFormField({super.key, this.label, this.hint, this.errorMessage, this.onChaged, this.validator, this.obscureText = false});
+
+          @override
+          Widget build(BuildContext context) {
+            final enableBorder = UnderlineInputBorder(
+              borderSide: BorderSide(color: Colors.white),
+            );
+            final focusedBorder = UnderlineInputBorder(
+                borderSide: BorderSide(color: Colors.white, width: 2)
+            );
+            final errorBorder = UnderlineInputBorder(
+                borderSide: BorderSide(color: Colors.red, width: 2)
+            );
+
+            return TextFormField(
+              onChanged: onChaged,
+              validator: validator,
+              obscureText: obscureText ,
+              decoration: InputDecoration(
+                isDense: true,
+                contentPadding: EdgeInsets.symmetric(vertical: 8),
+                enabledBorder: enableBorder,
+                focusedBorder: focusedBorder,
+                errorBorder: errorBorder,
+                focusedErrorBorder: errorBorder,
+                label: label != null ? Text(label!) : null,
+                hintText: hint,
+                focusColor: Colors.white,
+                errorText: errorMessage,
+              ),
+            );
+          }
+        }
+
+5) export 'custom_text_form_field.dart'; en el archivo barrill widgets
+
+6) y comenzamos a trabajar en login_screen.dart
+
+
+        import 'package:app_payku_base_v_0_1/features/shared/widgets/widgets.dart';
+        import 'package:flutter/material.dart';
+
+        class LoginScreen extends StatelessWidget {
+          const LoginScreen({super.key});
+
+          @override
+          Widget build(BuildContext context) {
+            final backgroundColor =
+            0xff123456; //Theme.of(context).scaffoldBackgroundColor;
+            final size = MediaQuery.of(context).size;
+            final height = MediaQuery.of(context).size.height - 280;
+            return GestureDetector(
+              onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
+              child: Scaffold(
+                extendBodyBehindAppBar: true,
+                body: SizedBox.expand(
+                  child: Stack(
+                    children: [
+                      Positioned.fill(
+                        child: Image.network(
+                          'https://plus.unsplash.com/premium_photo-1771774994010-576337c0d143?q=80&w=678&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+                          fit: BoxFit.cover,
+                          loadingBuilder: (context, child, loadingProgress) {
+                            if (loadingProgress == null) return child;
+                            return Container(
+                              color: Color(0xff123456), // Color mientras carga
+                              child: Center(child: CircularProgressIndicator()),
+                            );
+                          },
+                        ),
+                      ), // imagen de fondo
+                      SafeArea(
+                        child: SingleChildScrollView(
+                          physics: ClampingScrollPhysics(),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              SizedBox(height: 40),
+                              Container(
+                                alignment: Alignment.center,
+                                child: Image.network(
+                                  width: 200,
+                                  height: 100,
+                                  'https://payku.com/images/pk23logo.png',
+                                  loadingBuilder: (context, child, loadingProgress) {
+                                    if (loadingProgress == null) return child;
+                                    return Center(child: CircularProgressIndicator());
+                                  },
+                                  errorBuilder: (context, error, stackTrace) {
+                                    print(
+                                      'Error loading image: $error',
+                                    ); // Ver el error
+                                    return Icon(Icons.error, color: Colors.red);
+                                  },
+                                ),
+                              ),
+                              SizedBox(height: 140),
+                              Container(
+                                height: size.height - 280, // 40 + 100 140
+                                width: double.infinity,
+                                decoration: BoxDecoration(
+                                  color: Colors.black.withValues(alpha: 0.8),
+                                  borderRadius: BorderRadius.only(
+                                    topLeft: Radius.circular(20),
+                                    topRight: Radius.circular(20),
+                                  ),
+                                ),
+                                child: SingleChildScrollView(
+                                  child: Container(
+                                      height: height,
+                                      padding: EdgeInsets.symmetric(
+                                        horizontal: 50,
+                                        vertical: 10,
+                                      ),
+                                      width: double.infinity,
+                                      child: _AccessForm()
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          }
+        }
+
+        class _AccessForm extends StatelessWidget {
+          const _AccessForm({super.key});
+
+          @override
+          Widget build(BuildContext context) {
+
+            return Form(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  CustomTextFormField(
+                    label: 'Ingrese su Email',
+                    onChaged: null,
+                    errorMessage: null,
+                  ),
+                  SizedBox(height: 10),
+                  CustomTextFormField(
+                    label: 'Ingrese su Clave',
+                    onChaged: null,
+                    errorMessage: null,
+                    obscureText: true,
+                  ),
+                  SizedBox(height: 40),
+                  FilledButton.tonalIcon(
+                    onPressed: () {
+                      // bool isValid = _formKey.currentState!.validate();
+                      // if (!isValid ) return;
+
+                    },
+                    label: Text('Entrar'),
+                    icon: Icon(Icons.arrow_circle_right),
+                  ),
+                ],
+              ),
+            );
+          }
+        }
+
+7) Ahora vamos con la integracion de riverpod
+
+        en main.dart debemos comenzar a configurar el riverpod
+
+        void main() async{
+          await Environment.initEnvironment();
+          runApp( ProviderScope(child: MainApp()));
+        }
+
+
+8) creamos el primer provider en features/auth/presentation/providers/login_screen_provider.dart y
+    el respectivo archivo de barril providers
+
+        export 'login_screen_provider.dart'; <- en providers.dart
+
+        Nota: se componen de 3 pasos  (state del provider,implementar el notifier,StateNotifierProvider - se consume afuera)
+
+
+            // state del provider
+
+            import 'package:app_payku_base_v_0_1/features/shared/shared.dart';
+            import 'package:flutter_riverpod/legacy.dart';
+            import 'package:formz/formz.dart';
+
+            // Parte 3 -> StateNotifierProvider - consume afuera
+            final loginScreenProvider = StateNotifierProvider.autoDispose<LoginScreenNotifier,LoginScreenState>((ref){
+              return LoginScreenNotifier();
+            });
+
+            class LoginScreenNotifier extends StateNotifier<LoginScreenState> {
+              LoginScreenNotifier(): super(LoginScreenState());
+
+              onUsernameChange( String value ){
+                final newUsername = UsernameInput.dirty(value);
+                state = state.copyWith(
+                    username: newUsername,
+                    isValid: Formz.validate([newUsername, state.password])
+                );
+              }
+
+              onPasswordChanged( String value ){
+                final newPassword = PasswordInput.dirty(value);
+                state = state.copyWith(
+                    password: newPassword,
+                    isValid: Formz.validate([newPassword, state.username])
+                );
+              }
+
+              onFormSubmit(){
+                _touchEveryfield();
+                if (!state.isValid) return;
+                print(state);
+              }
+              _touchEveryfield(){
+                final username = UsernameInput.dirty(state.username.value);
+                final password = PasswordInput.dirty(state.password.value);
+                state = state.copyWith(
+                    isFormPosted: true,
+                    username: username,
+                    password: password,
+                    isValid: Formz.validate([username, password])
+                );
+              }
+
+            }
+
+
+
+            class LoginScreenState {
+              final bool isPosting;
+              final bool isFormPosted;
+              final bool isValid;
+              final UsernameInput username;
+              final PasswordInput password;
+
+              LoginScreenState({
+                this.isPosting = false,
+                this.isFormPosted = false,
+                this.isValid = false,
+                this.username = const UsernameInput.pure(),
+                this.password = const PasswordInput.pure(),
+              });
+
+              LoginScreenState copyWith({
+                bool? isPosting,
+                bool? isFormPosted,
+                bool? isValid,
+                UsernameInput? username,
+                PasswordInput? password,
+              }) => LoginScreenState(
+                  isPosting : isPosting ?? this.isPosting,
+                  isFormPosted : this.isFormPosted,
+                  isValid : this.isValid,
+                  username : this.username,
+                  password : this.password
+              );
+
+              @override
+              String toString() {
+                return '''
+                LoginScreenState:
+                  isPosting = $isPosting,
+                  isFormPosted = $isFormPosted,
+                  isValid = $isValid,
+                  username = $username,
+                  password = $password
+                ''';
+              }
+            }
+
+
+
+9 ) Nos vamos a nuestro archivo del formulario
+        9.1 ) convertimos a _AccessForm en un consumerwidget
+
+        9.2 ) agregamos el atributo WidgetRef ->  Widget build(BuildContext context, WidgetRef ref) {
+
+        9.3 ) creamos una variable que nos de la referencia al state (solo al state, si le ponemos.notifier tendremos el acceso al notifer)
+
+        9.4 ) final LoginForm = ref.watch(loginScreenProvider);
+
+        9.5 ) agregamos en el input
+
+            CustomTextFormField(
+                label: 'Ingrese su Email',
+                onChaged: ref.read(loginScreenProvider.notifier).onUsernameChange,
+                            errorMessage: loginForm.isFormPosted ? loginForm.username.errorMessage :  null,
+              )
+
+10 ) archivo final del provider riverpod
+
+
+        // state del provider
+
+        import 'package:app_payku_base_v_0_1/features/shared/shared.dart';
+        import 'package:flutter   _riverpod/legacy.dart';
+        import 'package:formz/formz.dart';
+
+        // Parte 3 -> StateNotifierProvider - consume afuera
+        final loginScreenProvider = StateNotifierProvider.autoDispose<LoginScreenNotifier,LoginScreenState>((ref){
+          return LoginScreenNotifier();
+        });
+
+        class LoginScreenNotifier extends StateNotifier<LoginScreenState> {
+          LoginScreenNotifier(): super(LoginScreenState());
+
+          onUsernameChange( String value ){
+            final newUsername = UsernameInput.dirty(value);
+            state = state.copyWith(
+                username: newUsername,
+                isValid: Formz.validate([newUsername, state.password])
+            );
+          }
+
+          onPasswordChanged( String value ){
+            final newPassword = PasswordInput.dirty(value);
+            state = state.copyWith(
+                password: newPassword,
+                isValid: Formz.validate([newPassword, state.username])
+            );
+          }
+
+          onFormSubmit(){
+            _touchEveryfield();
+            print(state);
+            if (!state.isValid) return;
+
+          }
+          _touchEveryfield(){
+            final username = UsernameInput.dirty(state.username.value);
+            final password = PasswordInput.dirty(state.password.value);
+            state = state.copyWith(
+                isFormPosted: true,
+                username: username,
+                password: password,
+                isValid: Formz.validate([username, password])
+            );
+          }
+
+        }
+
+
+
+        class LoginScreenState {
+          final bool isPosting;
+          final bool isFormPosted;
+          final bool isValid;
+          final UsernameInput username;
+          final PasswordInput password;
+
+          LoginScreenState({
+            this.isPosting = false,
+            this.isFormPosted = false,
+            this.isValid = false,
+            this.username = const UsernameInput.pure(),
+            this.password = const PasswordInput.pure(),
+          });
+
+          LoginScreenState copyWith({
+            bool? isPosting,
+            bool? isFormPosted,
+            bool? isValid,
+            UsernameInput? username,
+            PasswordInput? password,
+          }) => LoginScreenState(
+            isPosting    : isPosting    ?? this.isPosting,
+            isFormPosted : isFormPosted ?? this.isFormPosted,
+            isValid      : isValid      ?? this.isValid,
+            username     : username     ?? this.username,
+            password     : password     ?? this.password,
+          );
+
+          @override
+          String toString() {
+            return '''
+            LoginScreenState:
+              isPosting = $isPosting,
+              isFormPosted = $isFormPosted,
+              isValid = $isValid,
+              username = $username,
+              password = $password
+            ''';
+          }
+        }
+
+

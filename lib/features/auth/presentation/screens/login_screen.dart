@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../shared/widgets/widgets.dart';
+
 class LoginScreen extends StatelessWidget {
   const LoginScreen({super.key});
 
@@ -8,6 +10,7 @@ class LoginScreen extends StatelessWidget {
     final backgroundColor =
     0xff123456; //Theme.of(context).scaffoldBackgroundColor;
     final size = MediaQuery.of(context).size;
+    final height = MediaQuery.of(context).size.height - 280;
     return GestureDetector(
       onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
       child: Scaffold(
@@ -64,7 +67,17 @@ class LoginScreen extends StatelessWidget {
                             topRight: Radius.circular(20),
                           ),
                         ),
-                        child: _Formulario(),
+                        child: SingleChildScrollView(
+                          child: Container(
+                              height: height,
+                              padding: EdgeInsets.symmetric(
+                                horizontal: 50,
+                                vertical: 10,
+                              ),
+                              width: double.infinity,
+                              child: _AccessForm()
+                          ),
+                        ),
                       ),
                     ],
                   ),
@@ -78,56 +91,40 @@ class LoginScreen extends StatelessWidget {
   }
 }
 
-class _Formulario extends StatelessWidget {
-  const _Formulario({super.key});
+class _AccessForm extends StatelessWidget {
+  const _AccessForm({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final height = MediaQuery.of(context).size.height - 280;
 
-    return SingleChildScrollView(
-      child: Container(
-        height: height,
-        padding: EdgeInsets.symmetric(horizontal: 50, vertical: 10),
-        width: double.infinity,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            TextFormField(
-              keyboardType: TextInputType.emailAddress,
-              style: const TextStyle(color: Colors.white),
-              cursorColor: Colors.white,
-              decoration: const InputDecoration(
-                labelText: 'Correo',
-                labelStyle: TextStyle(color: Colors.white70),
-                enabledBorder: UnderlineInputBorder(
-                  borderSide: BorderSide(color: Colors.white70),
-                ),
-                focusedBorder: UnderlineInputBorder(
-                  borderSide: BorderSide(color: Colors.white, width: 2),
-                ),
-              ),
-            ),
-            SizedBox(height: 16),
-            TextFormField(
-              obscureText: true,
-              style: const TextStyle(color: Colors.white),
-              cursorColor: Colors.white,
-              decoration: const InputDecoration(
-                labelText: 'Contraseña',
-                labelStyle: TextStyle(color: Colors.white70),
-                enabledBorder: UnderlineInputBorder(
-                  borderSide: BorderSide(color: Colors.white70),
-                ),
-                focusedBorder: UnderlineInputBorder(
-                  borderSide: BorderSide(color: Colors.white, width: 2),
-                ),
-              ),
-            ),
-          ],
-        ),
+    return Form(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          CustomTextFormField(
+            label: 'Ingrese su Email',
+            onChaged: null,
+            errorMessage: null,
+          ),
+          SizedBox(height: 10),
+          CustomTextFormField(
+            label: 'Ingrese su Clave',
+            onChaged: null,
+            errorMessage: null,
+            obscureText: true,
+          ),
+          SizedBox(height: 40),
+          FilledButton.tonalIcon(
+            onPressed: () {
+              // bool isValid = _formKey.currentState!.validate();
+              // if (!isValid ) return;
+
+            },
+            label: Text('Entrar'),
+            icon: Icon(Icons.arrow_circle_right),
+          ),
+        ],
       ),
     );
   }
 }
-
