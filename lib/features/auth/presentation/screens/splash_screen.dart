@@ -1,8 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
-import 'package:payku_mobile/features/screem_test1.dart';
-// import 'package:app_payku_v0/features/auth/presentation/screens/login_screen.dart';
+import 'package:payku_mobile/features/auth/presentation/screens/login_screen.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({Key? key}) : super(key: key);
@@ -17,7 +16,7 @@ class SplashScreenState extends State<SplashScreen> {
     super.initState();
     Timer(Duration(milliseconds: (6 * 1000).round()), () {
       Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (context) => const ScreemTest1()),
+        MaterialPageRoute(builder: (context) => const LoginScreen()),
       );
     });
   }

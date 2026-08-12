@@ -1,0 +1,162 @@
+
+FASE 3 CONSTRUCCION DE MODULO LOGIN  /lib/features/auth *********** AQUI CADA MODULO
+
+    1 ) Activamos el permiso de red de nuestra app
+
+        1.1) Android  vamos a android/app/src/main/AndroidManifest.xml y agregamos la linea
+
+            <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+                <!-- AGREGA ESTO AQUÍ -->
+                <uses-permission android:name="android.permission.INTERNET"/>
+                <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+                <application
+                    android:label="payku"
+                    android:name="${applicationName}"
+                    android:icon="@mipmap/ic_launcher"
+                    android:usesCleartextTraffic="true">
+
+
+        Nota: En Android Studio, ve a Device Manager.
+
+              Busca tu emulador, haz clic en los tres puntos (⋮) a la derecha.
+              Selecciona Cold Boot Now. Esto obliga al sistema a encenderse desde cero, detectando la conexión actual de tu PC.
+
+
+        1.2 ) ios/Runner/Info.plist
+
+                Agrega esto dentro del <dict> principal:
+                xml<key>NSAppTransportSecurity</key>
+                <dict>
+                    <key>NSAllowsArbitraryLoads</key>
+                    <true/>
+                </dict>
+
+        1.3 ) luego
+                       flutter clean
+                       flutter pub get
+                       flutter run
+
+    2 ) Crearemos el primer Screen /lib/features/auth/presentation/screens/login_screen.dart
+    Nota: Aqui estaremos creando un formulario del tipo tradicional
+    Nota 2 :
+
+
+solo cuanod usemos cubits que  no sera ahora
+                Ve a File > Settings > Plugins
+                Busca Flutter Bloc
+                Instálalo y reinicia
+                Haz clic derecho en la carpeta donde quieres crear el cubit
+                Aparece la opción New > Cubit Class
+
+
+
+
+
+
+
+            import 'package:flutter/material.dart';
+
+            class LoginScreen extends StatelessWidget {
+              const LoginScreen({super.key});
+
+              @override
+              Widget build(BuildContext context) {
+                final backgroundColor =
+                    0xff123456; //Theme.of(context).scaffoldBackgroundColor;
+                final size = MediaQuery.of(context).size;
+                return GestureDetector(
+                  onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
+                  child: Scaffold(
+                    extendBodyBehindAppBar: true,
+                    body: SizedBox.expand(
+                      child: Stack(
+                        children: [
+                          Positioned.fill(
+                            child: Image.network(
+                              'https://plus.unsplash.com/premium_photo-1771774994010-576337c0d143?q=80&w=678&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+                              fit: BoxFit.cover,
+                              loadingBuilder: (context, child, loadingProgress) {
+                                if (loadingProgress == null) return child;
+                                return Container(
+                                  color: Color(0xff123456), // Color mientras carga
+                                  child: Center(child: CircularProgressIndicator()),
+                                );
+                              },
+                            ),
+                          ), // imagen de fondo
+                          SafeArea(
+                            child: SingleChildScrollView(
+                              physics: ClampingScrollPhysics(),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  SizedBox(height: 40),
+                                  Container(
+                                    alignment: Alignment.center,
+                                    child: Image.network(
+                                      width: 200,
+                                      height: 100,
+                                      'https://payku.com/images/pk23logo.png',
+                                      loadingBuilder: (context, child, loadingProgress) {
+                                        if (loadingProgress == null) return child;
+                                        return Center(child: CircularProgressIndicator());
+                                      },
+                                      errorBuilder: (context, error, stackTrace) {
+                                        print(
+                                          'Error loading image: $error',
+                                        ); // Ver el error
+                                        return Icon(Icons.error, color: Colors.red);
+                                      },
+                                    ),
+                                  ),
+                                  SizedBox(height: 140),
+                                  Container(
+                                    height: size.height - 280, // 40 + 100 140
+                                    width: double.infinity,
+                                    decoration: BoxDecoration(
+                                      color: Colors.black.withValues(alpha: 0.8),
+                                      borderRadius: BorderRadius.only(
+                                        topLeft: Radius.circular(20),
+                                        topRight: Radius.circular(20),
+                                      ),
+                                    ),
+                                    child: _Formulario(),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              }
+            }
+
+            class _Formulario extends StatelessWidget {
+              const _Formulario({super.key});
+
+              @override
+              Widget build(BuildContext context) {
+                final height = MediaQuery.of(context).size.height - 280;
+
+                return SingleChildScrollView(
+                  child: Container(
+                    height: height,
+                    padding: EdgeInsets.symmetric(horizontal: 50, vertical: 10),
+                    width: double.infinity,
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        TextFormField(),
+                        SizedBox(height: 16),
+                        TextFormField(),
+                      ],
+                    ),
+                  ),
+                );
+              }
+            }
+
+
