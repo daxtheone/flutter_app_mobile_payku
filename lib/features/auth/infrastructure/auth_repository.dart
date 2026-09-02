@@ -19,7 +19,10 @@ class AuthRepository {
             'email': username,
             'password': password
           });
-      print(response);
+      print('comienzo');
+
+      print(response.data['user']['usuario']);
+      print('fin');
 
       final user = UserMapper.userJsonToEntity(response.data);
       print(user);
