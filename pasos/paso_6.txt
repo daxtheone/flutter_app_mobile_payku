@@ -1,0 +1,592 @@
+shared_preferences
+
+   1 ) Creamos el archivo lib/features/home/home_screen.dart
+        que sera la primera pagina a mostrar cuando nos loguiemos
+
+        1.1) home_screen.dart
+
+            import 'package:flutter/material.dart';
+
+            class HomeScreen extends StatelessWidget {
+              const HomeScreen({super.key});
+
+              @override
+              Widget build(BuildContext context) {
+                return const Placeholder();
+              }
+            }
+
+        1.2)  Agregamos la nueva pagina al router
+
+
+            import 'package:app_payku_base_v_0_1/features/auth/presentation/screens/screens.dart';
+            import 'package:app_payku_base_v_0_1/features/home/home_screen.dart';
+            import 'package:go_router/go_router.dart';
+
+            import '../../features/screem_test1.dart';
+            import '../../features/screem_test2.dart';
+
+            final appRouter = GoRouter(
+              initialLocation: '/home',
+              routes: [
+                GoRoute(path: '/', builder: (context, state) => const SplashScreen()),
+                GoRoute(path: '/home', builder: (context, state) => const HomeScreen()),
+                GoRoute(path: '/screem1', builder: (context, state) => const ScreemTest1()),
+                GoRoute(path: '/screem2', builder: (context, state) => const ScreemTest2()),
+              ],
+            );
+
+
+   2 ) Creamos nuestra clase que se encargara de administrar el storage a traves de shared_preferences
+
+        2.1 ) lib/features/shared/services/key_value_storage_service.dart
+
+            abstract class KeyValueStorageService {
+              // La T significa que recibe  un dato generico, si recibe int, lo trata como int
+              Future<void> setKeyValue<T>(String key, T value);
+              Future<T?> getValue<T>(String key);
+              Future<bool> removeKey( String key );
+            }
+
+        2.2 ) lib/features/shared/services/key_value_storage_service_impl.dart
+
+                import 'package:shared_preferences/shared_preferences.dart';
+                import 'key_value_storage_service.dart';
+
+                class KeyValueStorageServiceImpl extends KeyValueStorageService {
+                  final _prefsFuture = SharedPreferences.getInstance();
+
+
+                  @override
+                  Future<T?> getValue<T>(String key) async{
+                    // final prefs = await getSharedPrefs();
+                    final prefs = await _prefsFuture;
+                    switch(T){
+                      case int:
+                        return prefs.getInt(key) as T?;
+                      case String:
+                        return prefs.getString(key) as T?;
+                      default:
+                        throw UnimplementedError('Set not implemented for type ${ T.runtimeType}');
+                    }
+                  }
+
+                  @override
+                  Future<bool> removeKey(String key) async{
+                    final prefs = await _prefsFuture;
+                    return await prefs.remove(key);
+                  }
+
+                  @override
+                  Future<void> setKeyValue<T>(String key, T value) async {
+                    final prefs = await _prefsFuture;
+
+                    switch(T){
+                      case int:
+                        prefs.setInt(key, value as int);
+                        break;
+                      case String:
+                        prefs.setString(key, value as String);
+                        break;
+                      default:
+                        throw UnimplementedError('Set not implemented for type ${ T.runtimeType}');
+                    }
+                  }
+                }
+        2.3 ) Creamos nuestro archivo de barril  lib/features/shared/services/services.dart
+
+
+    3.0 ) creamos una constante en neustro archivo environment
+
+    import 'package:flutter_dotenv/flutter_dotenv.dart';
+
+    class Environment {
+      static Future<void> initEnvironment() async {
+        await dotenv.load(fileName: '.env');
+      }
+      static String apiUrl = dotenv.env['API_URL'] ?? 'No está configurado el API_URL';
+      static const tokenKey = 'tokenApp';
+
+    }
+
+   3) editamos nuestro archivo provider   /lib/features/auth/presentation/providers/auth_provider.dart
+        tokenApp
+
+        3.1 ->   en el metodo _setLoggedUser donde si esta to do bien guardamos en el storage
+                  await keyValueStorageService.setKeyValue(Environment.tokenKey, user.token);
+
+        3.2 ->  en el metodo logout quito el token del storage
+                 await keyValueStorageService.removeKey(Environment.tokenKey);
+
+        3.3 ->  En el metodo checkAuthStatus verificamos si existe el el token en el storage
+                    void checkAuthStatus() async{
+                     final token = await keyValueStorageService.getValue<String>(Environment.tokenKey);
+                     if (token == null) return logout();
+
+
+        3.4 -> el archivo quedaria asi :
+
+                import 'package:app_payku_base_v_0_1/features/auth/entities/entities.dart';
+                import 'package:app_payku_base_v_0_1/features/shared/services/services.dart';
+                import 'package:app_payku_base_v_0_1/features/shared/widgets/widgets.dart';
+                import 'package:app_payku_base_v_0_1/features/auth/infrastructure/auth_repository.dart';
+                import 'package:flutter_riverpod/legacy.dart';
+
+                final authProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref){
+                  final authRepository = AuthRepository();
+                  final keyValueStorageService = KeyValueStorageServiceImpl();
+
+                  return AuthNotifier(
+                    authRepository: authRepository,
+                    keyValueStorageService:keyValueStorageService
+                  );
+                });
+
+                class AuthNotifier extends StateNotifier<AuthState>{
+                    AuthNotifier({
+                      required this.authRepository, required this.keyValueStorageService
+                    }): super( AuthState() ){
+                      checkAuthStatus();
+                    }
+                  final AuthRepository authRepository;
+                  final KeyValueStorageService keyValueStorageService;
+
+                  Future<void> loginUser( String username, String password) async {
+                    // temporalmente
+                    await Future.delayed(const Duration(milliseconds: 500));
+                    print('probandoooooo');
+                    try {
+                      final user = await authRepository.login(username, password);
+                      await _setLoggedUser(user);
+                    } on CustomError catch (e) {
+                      logout(e.message);
+                    } catch (e) {
+                      logout ('Error no controlado');
+                    }
+
+                  }
+
+                  void checkAuthStatus() async{
+                    final token = await keyValueStorageService.getValue<String>(Environment.tokenKey);
+                    if (token == null) return logout();
+                    try {
+                      final user = await authRepository.checkAuthStatus(token);
+                      await _setLoggedUser(user);
+                    } catch  (e) {
+                      logout();
+                    }
+                  }
+
+                  Future<void> logout([String? errorMessage]) async{
+                    // Todo: limpiar token
+                    await keyValueStorageService.removeKey(Environment.tokenKey);
+                    state = state.copyWith(authStatus: AuthStatus.notAuthenticated, user:null, errorMessage: errorMessage);
+                  }
+
+                   Future<void> _setLoggedUser(User user) async{
+                    // Todo: necesitamos guardar el token fisicamente en el movil
+                    await keyValueStorageService.setKeyValue(Environment.tokenKey, user.token);
+                    state = state.copyWith(
+                      user: user,
+                      authStatus: AuthStatus.authenticated,
+                      errorMessage: '',
+                    );
+
+                  }
+                }
+
+                enum AuthStatus { checking, authenticated, notAuthenticated }
+
+                class AuthState {
+                  final AuthStatus authStatus;
+                  final User? user;
+                  final String errorMessage;
+
+                  AuthState({
+                    this.authStatus = AuthStatus.checking,
+                    this.user,
+                    this.errorMessage = '',
+                  });
+
+                  AuthState copyWith({
+                    AuthStatus? authStatus,
+                    User? user,
+                    String? errorMessage,
+                  }) => AuthState(
+                    authStatus: authStatus ?? this.authStatus,
+                    user: user ?? this.user,
+                    errorMessage: errorMessage ?? this.errorMessage,
+                  );
+                }
+
+
+        3.5 -> En el archivo lib/features/auth/infrastructure/auth_repository.dart
+        creamos nuestro metodo que consumira el endpoint para revisar token y su vigencia
+
+              Future<User> checkAuthStatus(String token) async {
+                    try {
+                      final response = await dio.get('/auth/check-status' , options: Options(
+                        headers: {
+                          'Authorization': 'Bearer $token'
+                        }
+                      ));
+
+                      final user = UserMapper.userJsonToEntity(response.data);
+                      return user;
+
+                    } on DioException catch(e){
+                      print(e);
+                      if( e.response?.statusCode == 401 ) {
+                        throw CustomError('Token no es válido' );
+                      }
+                      if (e.type == DioExceptionType.connectionTimeout) {
+                        throw CustomError('Sin conexión a internet');
+                      }
+                      throw Exception();
+                    } catch (e) {
+                      throw Exception();
+                    }
+              }
+
+
+
+
+   4 ) Editamos el app_router.dart para pasarlo a una variable de tipo provider
+
+
+        final goRouterProvider = Provider((ref){
+          final goRouterNotifier = ref.read(goRouterNotifierProvider);
+         return GoRouter(
+           initialLocation: '/',
+           refreshListenable: goRouterNotifier,
+           routes: [
+             GoRoute(path: '/', builder: (context, state) => const SplashScreen()),
+             GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
+             GoRoute(path: '/home', builder: (context, state) => const HomeScreen()),
+             GoRoute(path: '/screem1', builder: (context, state) => const ScreemTest1()),
+             GoRoute(path: '/screem2', builder: (context, state) => const ScreemTest2()),
+           ],
+           redirect: (context, state) {
+             final isGoingTo = state.matchedLocation;
+             final authStatus = goRouterNotifier.authStatus;
+
+             if ( isGoingTo == '/' && authStatus == AuthStatus.checking ) return null;
+             if( authStatus== AuthStatus.notAuthenticated ){
+               if ( isGoingTo == '/' || isGoingTo == '/login') return null;
+               return '/login';
+             }
+             if( authStatus == AuthStatus.authenticated ) {
+               if (isGoingTo == '/login' || isGoingTo == '/') return '/home';
+             }
+
+             print(state);
+             return null;
+           }
+         );
+        });
+
+
+
+
+
+
+
+
+   5 ) Ajustamos el main par aque consuma el provider nuevo del app_router
+
+
+
+            import 'package:flutter/material.dart';
+            import 'package:flutter_riverpod/flutter_riverpod.dart';
+            import 'config/config.dart';
+
+            void main() async{
+              await Environment.initEnvironment();
+              runApp( ProviderScope(child: MainApp()));
+            }
+
+            class MainApp extends ConsumerWidget {
+              const MainApp({super.key});
+
+              @override
+              Widget build(BuildContext context, WidgetRef ref) {
+                final appRouter = ref.watch(goRouterProvider);
+                return MaterialApp.router(
+                  routerConfig: appRouter,
+                  theme: AppTheme().getTheme(),
+                  debugShowCheckedModeBanner: false,
+                );
+              }
+            }
+
+
+    6) Creamos el archivo lib/config/router/app_router_notifier.dart
+
+        import 'package:payku_mobile/features/auth/presentation/providers/auth_provider.dart';
+        import 'package:flutter/foundation.dart';
+        import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+
+        final goRouterNotifierProvider = Provider((ref){
+          final authNotifier = ref.read(authProvider.notifier);
+          return GoRouterNotifier(authNotifier);
+        });
+
+        class GoRouterNotifier extends ChangeNotifier {
+          final AuthNotifier _authNotifier;
+          AuthStatus _authStatus = AuthStatus.checking;
+
+          GoRouterNotifier(this._authNotifier){
+            _authNotifier.addListener((state){
+              authStatus=state.authStatus;
+            });
+          }
+          AuthStatus get authStatus => _authStatus;
+
+          set authStatus (AuthStatus value){
+            _authStatus = value;
+            notifyListeners();
+          }
+
+        }
+    7 ) en login_screen_provider bloqueamos  el boton login mientras este en proceso
+
+        en el metodo buscar onFormSubmit
+
+          onFormSubmit() async {
+            _touchEveryfield();
+            print(state);
+            if (!state.isValid) return;
+            // await loginUserCallback( state.username.value, state.password.value );
+            print('Llego aqui');
+            state = state.copyWith(isPosting: true);
+            try {
+              await loginUserCallback(state.username.value, state.password.value);
+            } finally {
+              if (mounted) state = state.copyWith(isPosting: false);
+            }
+          }
+
+
+
+    7.1 -> en login_screen.dart actualizamos el Form
+
+        Form(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              CustomTextFormField(
+                label: 'Ingrese su Email',
+                onChaged: ref.read(loginScreenProvider.notifier).onUsernameChange,
+                errorMessage: loginForm.isFormPosted ? loginForm.username.errorMessage :  null,
+              ),
+              SizedBox(height: 10),
+              CustomTextFormField(
+                label: 'Ingrese su Clave',
+                onChaged: ref.read(loginScreenProvider.notifier).onPasswordChanged,
+                errorMessage: loginForm.isFormPosted ? loginForm.password.errorMessage : null,
+                obscureText: true,
+              ),
+              SizedBox(height: 40),
+              FilledButton.tonalIcon(
+                onPressed: loginForm.isPosting
+                    ? null
+                    : () => ref.read(loginScreenProvider.notifier).onFormSubmit(),
+                icon: loginForm.isPosting
+                    ? SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.38),
+                  ),
+                )
+                    : const Icon(Icons.arrow_circle_right),
+                label: Text(loginForm.isPosting ? 'Ingresando...' : 'Entrar'),
+              ),
+            ],
+          ),
+        );
+
+
+8 ) los archivos aut_provider.dart con ajustes de catch quedan asi:
+
+
+        import 'package:payku_mobile/config/constants/environment.dart';
+        import 'package:payku_mobile/features/auth/entities/entities.dart';
+        import 'package:payku_mobile/features/shared/services/key_value_storage_service.dart';
+        import 'package:payku_mobile/features/shared/widgets/widgets.dart';
+        import 'package:payku_mobile/features/auth/infrastructure/auth_repository.dart';
+        import 'package:flutter_riverpod/legacy.dart';
+        import 'package:payku_mobile/features/shared/services/services.dart';
+
+
+        final authProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref){
+          final authRepository = AuthRepository();
+          final keyValueStorageService = KeyValueStorageServiceImpl();
+
+          return AuthNotifier(
+              authRepository: authRepository,
+              keyValueStorageService:keyValueStorageService
+          );
+        });
+
+        class AuthNotifier extends StateNotifier<AuthState>{
+          AuthNotifier({
+            required this.authRepository, required this.keyValueStorageService
+          }): super( AuthState() ){
+            checkAuthStatus();
+          }
+          final AuthRepository authRepository;
+          final KeyValueStorageService keyValueStorageService;
+
+          Future<void> loginUser( String username, String password) async {
+            // temporalmente
+            await Future.delayed(const Duration(milliseconds: 500));
+            print('probando aqui');
+            try {
+              final user = await authRepository.login(username, password);
+              await _setLoggedUser(user);
+            } on CustomError catch (e) {
+              logout(e.message);
+            }  catch (e, stackTrace) {
+              print('${e.runtimeType}: $e');
+              print(stackTrace);
+              logout('Error no controlado: $e');
+
+            }
+
+          }
+
+          void checkAuthStatus() async{
+            final token = await keyValueStorageService.getValue<String>(Environment.tokenKey);
+            if (token == null) return logout();
+            try {
+              final user = await authRepository.checkAuthStatus(token);
+              await _setLoggedUser(user);
+            } catch  (e, stackTrace) {
+              print('checkAuthStatus ${e.runtimeType}: $e');
+              print(stackTrace);
+              logout();
+            }
+          }
+
+          Future<void> logout([String? errorMessage]) async{
+            // Todo: limpiar token
+            await keyValueStorageService.removeKey(Environment.tokenKey);
+            state = state.copyWith(authStatus: AuthStatus.notAuthenticated, user:null, errorMessage: errorMessage);
+          }
+
+          Future<void> _setLoggedUser(User user) async{
+            // Todo: necesitamos guardar el token fisicamente en el movil
+            await keyValueStorageService.setKeyValue(Environment.tokenKey, user.token);
+            state = state.copyWith(
+              user: user,
+              authStatus: AuthStatus.authenticated,
+              errorMessage: '',
+            );
+
+          }
+        }
+
+        enum AuthStatus { checking, authenticated, notAuthenticated }
+
+        class AuthState {
+          final AuthStatus authStatus;
+          final User? user;
+          final String errorMessage;
+
+          AuthState({
+            this.authStatus = AuthStatus.checking,
+            this.user,
+            this.errorMessage = '',
+          });
+
+          AuthState copyWith({
+            AuthStatus? authStatus,
+            User? user,
+            String? errorMessage,
+          }) => AuthState(
+            authStatus: authStatus ?? this.authStatus,
+            user: user ?? this.user,
+            errorMessage: errorMessage ?? this.errorMessage,
+          );
+        }
+
+
+    9) auth_repository.dart
+
+
+        import 'package:payku_mobile/config/config.dart';
+        import 'package:dio/dio.dart';
+        import 'package:payku_mobile/features/auth/entities/entities.dart';
+        import '../../shared/shared.dart';
+
+        class AuthRepository {
+          final dio = Dio(
+              BaseOptions(
+                baseUrl: Environment.apiUrl,
+              )
+          );
+          Future<User> login(String username, String password) async {
+            try {
+              // final response = await dio.post('/users/loginApp',
+              print(Environment.apiUrl);
+
+              final response = await dio.post('/users/users/login',
+                  data: {
+                    'email': username,
+                    'password': password
+                  });
+              print(response);
+
+              final user = UserMapper.userJsonToEntity(response.data);
+              print(user);
+              return user;
+            } on DioException catch(e){
+              print('DioException [${e.type}] status: ${e.response?.statusCode}');
+              print('body: ${e.response?.data}');
+              print('message: ${e.message}');
+              if( e.response?.statusCode == 401 ) {
+                final data = e.response?.data;
+                final serverMsg = data is Map ? data['message'] as String? : null;
+                throw CustomError(serverMsg ?? 'Credenciales incorrectas');
+              }
+              if (e.type == DioExceptionType.connectionTimeout) {
+                throw CustomError('Sin conexión a internet');
+              }
+              throw CustomError('Error ${e.response?.statusCode ?? e.type}: ${e.message}');
+            }  catch (e, stackTrace) {
+              print('${e.runtimeType}: $e');
+              print(stackTrace);
+              rethrow;
+            }
+          }
+          Future<User> checkAuthStatus(String token) async {
+            try {
+              final response = await dio.get('/auth/check-status' , options: Options(
+                  headers: {
+                    'Authorization': 'Bearer $token'
+                  }
+              ));
+
+              final user = UserMapper.userJsonToEntity(response.data);
+              return user;
+
+            } on DioException catch(e){
+              print('checkAuthStatus DioException [${e.type}] ${e.response?.statusCode}: ${e.response?.data}');
+              if( e.response?.statusCode == 401 ) {
+                throw CustomError('Token no es válido' );
+              }
+              if (e.type == DioExceptionType.connectionTimeout) {
+                throw CustomError('Sin conexión a internet');
+              }
+              throw CustomError('Error verificando sesión: ${e.response?.statusCode ?? e.type}');
+            } catch (e, stackTrace) {
+              print('checkAuthStatus ${e.runtimeType}: $e');
+              print(stackTrace);
+              rethrow;
+            }
+          }
+        }
+

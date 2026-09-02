@@ -1,0 +1,181 @@
+Menu lateral y cerrar sesion
+
+
+vamos a crear un menu lateral
+
+
+
+    1) Comenzamos editando nuestro lib/features/home/home_screen.dart
+
+        Scaffold(
+              appBar: AppBar(
+                title: const Text('Pagina homeee'),
+                automaticallyImplyLeading: false,
+              ),
+              body: Placeholder(),
+              endDrawer: SideMenu(), // <- aqui va nuestra pagina con el codigo del menu
+            )
+
+    2) Creamos el archivo /lib/features/home/menu/menu_items.dart en el cual tendremos el listado de opciones del menu
+
+            import 'package:flutter/material.dart';
+            class MenuItem {
+              final String title;
+              final String subTitle;
+              final String link;
+              final IconData icon;
+              const MenuItem({
+                required this.title,
+                required this.subTitle,
+                required this.link,
+                required this.icon
+              });
+            }
+            const appMenuItems = <MenuItem>[
+              MenuItem(
+                  title: 'Riverpod Counter',
+                  subTitle: 'Introducción a riverpod',
+                  link: '/counter-river',
+                  icon: Icons.add
+              ),
+              MenuItem(
+                  title: 'Botones',
+                  subTitle: 'Varios botones en Flutter',
+                  link: '/buttons',
+                  icon: Icons.smart_button_outlined
+              ),
+              MenuItem(
+                  title: 'Tarjetas',
+                  subTitle: 'Un contenedor estilizado',
+                  link: '/cards',
+                  icon: Icons.credit_card
+              ),
+              MenuItem(
+                  title: 'Progress Indicators',
+                  subTitle: 'Generales y controlados',
+                  link: '/progress',
+                  icon: Icons.refresh_rounded
+              ),
+              MenuItem(
+                  title: 'Snackbars y diálogos',
+                  subTitle: 'Indicadores en pantalla',
+                  link: '/snackbars',
+                  icon: Icons.info_outline
+              ),
+              MenuItem(
+                  title: 'Animated container',
+                  subTitle: 'Stateful widget animado',
+                  link: '/animated',
+                  icon: Icons.check_box_outline_blank_rounded
+              ),
+              MenuItem(
+                  title: 'UI Controls + Tiles',
+                  subTitle: 'Una serie de controles de Flutter',
+                  link: '/ui-controls',
+                  icon: Icons.car_rental_outlined
+              ),
+              MenuItem(
+                  title: 'Introducción a la aplicación',
+                  subTitle: 'Pequeño tutorial introductorio',
+                  link: '/tutorial',
+                  icon: Icons.accessible_rounded
+              ),
+              MenuItem(
+                  title: 'InfiniteScroll y Pull',
+                  subTitle: 'Listas infinitas y pull to refresh',
+                  link: '/infinite',
+                  icon: Icons.list_alt_rounded
+              ),
+              MenuItem(
+                  title: 'Cambiar tema',
+                  subTitle: 'Cambiar tema de la aplicación',
+                  link: '/theme-changer',
+                  icon: Icons.color_lens_outlined
+              ),
+            ];
+
+
+    3) Creamos el archivo /lib/features/home/menu/side_menu.dart que podria ser un staefull widgets para
+    tener el funcionamiento del side menu, si quisieramos hacer el cambio de estado con la opcion seleccionada,
+    pero lo tendremos comentado
+
+           import 'package:app_payku_base_v_0_1/features/backoffice/home/menu/menu_items.dart';
+           import 'package:flutter/material.dart';
+           import 'package:go_router/go_router.dart';
+
+           class SideMenu extends StatefulWidget {
+             const SideMenu({super.key});
+             @override
+             State<SideMenu> createState() => _SideMenuState();
+           }
+
+           class _SideMenuState extends State<SideMenu> {
+             // int navDrawerIndex = 0;
+             @override
+             Widget build(BuildContext context) {
+               // para tener un tamaño de paging optimo para iphone y android
+               final hasNotch = MediaQuery.of(context).viewPadding.top > 35;
+
+               return NavigationDrawer(
+                 // selectedIndex: navDrawerIndex,
+                 onDestinationSelected: (value) {
+                   /*setState(() {
+                     // navDrawerIndex = value;
+                   });*/
+                   final menuItem = appMenuItems[value];
+                   // Aqui nos permite navegar a la opcion seleccionada
+                   Navigator.pop(context); // cierra el drawer como route
+                   context.push(menuItem.link);
+                 },
+                 children: [
+                   Padding(
+                     padding: EdgeInsets.fromLTRB(28, hasNotch ? 10 : 20, 16, 10),
+                     child: Text('Main'),
+                   ),
+                   ...appMenuItems
+                       .sublist(0, 3)
+                       .map(
+                         (item) => NavigationDrawerDestination(
+                           icon: Icon(item.icon),
+                           label: Text(item.title),
+                         ),
+                       ),
+                   Padding(padding: EdgeInsets.fromLTRB(28, 16, 28, 10), child: Divider()),
+                   Padding(
+                     padding: EdgeInsets.fromLTRB(28, 10, 16, 10),
+                     child: Text('More Options'),
+                   ),
+                   ...appMenuItems
+                       .sublist(3)
+                       .map(
+                         (item) => NavigationDrawerDestination(
+                           icon: Icon(item.icon),
+                           label: Text(item.title),
+                         ),
+                       ),
+                 ],
+                 footer: SafeArea(
+                   top: false,
+                   child: Column(
+                       mainAxisSize: MainAxisSize.min,
+                     children: [
+                       Divider(height: 1,),
+                       ListTile(
+                         leading: Icon(Icons.logout),
+                         title: Text('Cerrar Sesión'),
+                         onTap: (){
+                           Navigator.pop(context);
+                           context.go('/');
+                         },
+                       )
+                     ],
+                   ),
+                 ),
+               );
+             }
+           }
+
+
+    4) falta la creacion de una pagina extra llamada desde el router al name
+    159 y 160 del curso
+

@@ -1,6 +1,8 @@
-import 'package:flutter/material.dart';
 
-import '../../../shared/widgets/widgets.dart';
+import 'package:payku_mobile/features/auth/presentation/providers/providers.dart';
+import 'package:payku_mobile/features/shared/widgets/widgets.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class LoginScreen extends StatelessWidget {
   const LoginScreen({super.key});
@@ -91,11 +93,25 @@ class LoginScreen extends StatelessWidget {
   }
 }
 
-class _AccessForm extends StatelessWidget {
+class _AccessForm extends ConsumerWidget {
   const _AccessForm({super.key});
 
+  void showSnackbar(BuildContext context, String message){
+    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+    ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(message))
+    );
+  }
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final loginForm = ref.watch(loginScreenProvider);
+
+    ref.listen(authProvider, (previous, next) {
+      print('Holaa probando');
+      if (next.errorMessage.isEmpty) return;
+      showSnackbar(context, next.errorMessage);
+    });
 
     return Form(
       child: Column(
@@ -103,25 +119,32 @@ class _AccessForm extends StatelessWidget {
         children: [
           CustomTextFormField(
             label: 'Ingrese su Email',
-            onChaged: null,
-            errorMessage: null,
+            onChaged: ref.read(loginScreenProvider.notifier).onUsernameChange,
+            errorMessage: loginForm.isFormPosted ? loginForm.username.errorMessage :  null,
           ),
           SizedBox(height: 10),
           CustomTextFormField(
             label: 'Ingrese su Clave',
-            onChaged: null,
-            errorMessage: null,
+            onChaged: ref.read(loginScreenProvider.notifier).onPasswordChanged,
+            errorMessage: loginForm.isFormPosted ? loginForm.password.errorMessage : null,
             obscureText: true,
           ),
           SizedBox(height: 40),
           FilledButton.tonalIcon(
-            onPressed: () {
-              // bool isValid = _formKey.currentState!.validate();
-              // if (!isValid ) return;
-
-            },
-            label: Text('Entrar'),
-            icon: Icon(Icons.arrow_circle_right),
+            onPressed: loginForm.isPosting
+                ? null
+                : () => ref.read(loginScreenProvider.notifier).onFormSubmit(),
+            icon: loginForm.isPosting
+                ? SizedBox(
+              width: 18,
+              height: 18,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.38),
+              ),
+            )
+                : const Icon(Icons.arrow_circle_right),
+            label: Text(loginForm.isPosting ? 'Ingresando...' : 'Entrar'),
           ),
         ],
       ),
