@@ -1,0 +1,23 @@
+
+Vamos a comenzar el listado paginado
+
+Creamos la estructura de archivos
+
+    1) features/backoffice/transactions/entities
+
+    2) features/backoffice/transactions/infrastructure
+
+    3) features/backoffice/transactions/presentation
+        3.1) features/backoffice/transactions/providers
+        3.2) features/backoffice/transactions/screens
+            - transactions_screen.dart
+        3.3) features/backoffice/transactions/widgets
+
+
+
+
+
+1) vamos a comenzar con entidad   (https://quicktype.io/)
+
+
+

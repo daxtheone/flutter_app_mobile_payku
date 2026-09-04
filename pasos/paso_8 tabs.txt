@@ -1,0 +1,208 @@
+
+Vamos por los tabs, pero primero reestructuraremos un poco la carpeteria
+
+
+
+
+1 ) creamos el directorio /lib/features/backoffice
+
+2 ) movemos el /home al backoffice
+
+ Nota:  (actualizar el app_router.dart para que apunte al nuevo directorio)
+
+
+3 )  Creamos la carpeta /transactions que sera el primer listado
+
+
+4) creamos el archivo /lib/features/presentations.dart
+
+    en el cual tendremos un archibo barril con todas nuestras vistas
+
+
+    export 'package:payku_mobile/features/auth/presentation/screens/login_screen.dart';
+    export 'package:payku_mobile/features/auth/presentation/screens/splash_screen.dart';
+    export 'package:payku_mobile/features/backoffice/home/home_screen.dart';
+
+
+5) creamos la pagina /lib/features/backoffice/home/home.dart
+
+        Nota: Tendra el manejo de los tabs iniciales,y recuerda agregar la pagina al barril de vistas
+
+
+        class Home extends StatelessWidget {
+          static const String name = 'home';
+          final Widget navegationShell;
+
+          const Home({
+            super.key,
+            required this.navegationShell
+          });
+
+          @override
+          Widget build(BuildContext context) {
+            return Scaffold(
+              body: navegationShell,
+              bottomNavigationBar: Row(children: [
+                FilledButton(onPressed: (){context.go('/home');}, child: Text('Home ')),
+                FilledButton(onPressed: (){context.go('/products');}, child: Text('Productos ')),
+                FilledButton(onPressed: (){context.go('/transactions');}, child: Text('transacciones ')),
+              ],),
+            );
+          }
+        }
+
+
+
+
+6) actualizamos la pagina home_screen.dart con listview duming para probar que funciona todo ok
+
+
+      class HomeScreen extends StatelessWidget {
+          static const String name = 'home_screen';
+          const HomeScreen({super.key});
+
+          @override
+          Widget build(BuildContext context) {
+            return Scaffold(
+              appBar: AppBar(
+                title: const Text('Pagina homeee'),
+                automaticallyImplyLeading: false, // para que no muestre el boton de volver
+              ),
+              body: ListView(
+                children: [
+                  Center(child: Text('Hola Mundo'),),
+                  Center(child: Text('Hola Mundo'),),
+                  Center(child: Text('Hola Mundo'),),
+                  Center(child: Text('Hola Mundo'),),
+                  Center(child: Text('Hola Mundo'),),
+                  Center(child: Text('Hola Mundo'),),
+                  Center(child: Text('Hola Mundo'),),
+                  Center(child: Text('Hola Mundo'),),
+                  Center(child: Text('Hola Mundo'),),
+                  Center(child: Text('Hola Mundo'),),
+                  Center(child: Text('Hola Mundo'),),
+                  Center(child: Text('Hola Mundo'),),
+                  Center(child: Text('Hola Mundo'),),
+                  Center(child: Text('Hola Mundo'),),
+                  Center(child: Text('Hola Mundo'),),
+                  Center(child: Text('Hola Mundo'),),
+                  Center(child: Text('Hola Mundo'),),
+                  Center(child: Text('Hola Mundo'),),
+                  Center(child: Text('Hola Mundo'),),
+                  Center(child: Text('Hola Mundo'),),
+                  Center(child: Text('Hola Mundo'),),
+                  Center(child: Text('Hola Mundo'),),
+                  Center(child: Text('Hola Mundo'),),
+                  Center(child: Text('Hola Mundo'),),
+                  Center(child: Text('Hola Mundo'),),
+                  Center(child: Text('Hola Mundo'),),
+                  Center(child: Text('Hola Mundo'),),
+                  Center(child: Text('Hola Mundo'),),
+                  Center(child: Text('Hola Mundo'),),
+                  Center(child: Text('Hola Mundo'),),
+                  Center(child: Text('Hola Mundo'),),
+                  Center(child: Text('Hola Mundo'),),
+                  Center(child: Text('Hola Mundo'),),
+                  Center(child: Text('Hola Mundo'),),
+                  Center(child: Text('Hola Mundo'),),
+                  Center(child: Text('Hola Mundo'),),
+                  Center(child: Text('Hola Mundo'),),
+                  Center(child: Text('Hola Mundo'),),
+                  Center(child: Text('Hola Mundo'),),
+                  Center(child: Text('Hola Mundo'),),
+                  Center(child: Text('Hola Mundo'),),
+                  Center(child: Text('Hola Mundo'),),
+                  Center(child: Text('Hola Mundo'),),
+                  Center(child: Text('Hola Mundo'),),
+                  Center(child: Text('Hola Mundo'),),
+                  Center(child: Text('Hola Mundo'),),
+                  Center(child: Text('Hola Mundo'),),
+                  Center(child: Text('Hola Mundo'),),
+                  Center(child: Text('Hola Mundo'),),
+                  Center(child: Text('Hola Mundo'),),
+                  Center(child: Text('Hola Mundo'),),
+                  Center(child: Text('Hola Mundo'),),
+                  Center(child: Text('Hola Mundo'),),
+                  Center(child: Text('Hola Mundo'),),
+                  Center(child: Text('Hola Mundo'),),
+                  Center(child: Text('Hola Mundo'),),
+                  Center(child: Text('Hola Mundo'),),
+                  Center(child: Text('Hola Mundo'),),
+                  Center(child: Text('Hola Mundo'),),
+                  Center(child: Text('Hola Mundo'),),
+                  Center(child: Text('Hola Mundo'),),
+                  Center(child: Text('Hola Mundo'),),
+                  Center(child: Text('Hola Mundo'),),
+                  Center(child: Text('Hola Mundo'),),
+                  Center(child: Text('Hola Mundo'),),
+                  Center(child: Text('Hola Mundo'),),
+                  Center(child: Text('Hola Mundo'),),
+                  Center(child: Text('Hola Mundo'),),
+                  Center(child: Text('Hola Mundo'),),
+                  Center(child: Text('Hola Mundo'),),
+                  Center(child: Text('Hola Mundo'),),
+                  Center(child: Text('Hola Mundo'),),
+                  Center(child: Text('Hola Mundo'),),
+                  Center(child: Text('Hola Mundo'),),
+                  Center(child: Text('Hola Mundo'),),
+                  Center(child: Text('Hola Mundo'),),
+                  Center(child: Text('Hola Mundo'),),
+                  Center(child: Text('Hola Mundo'),),
+                  Center(child: Text('Hola Mundo'),),
+                  Center(child: Text('Hola Mundo'),),
+                  Center(child: Text('Hola Mundo'),),
+                  Center(child: Text('Hola Mundo'),),
+                  Center(child: Text('Hola Mundo'),),
+                  Center(child: Text('Hola Mundo'),),
+                  Center(child: Text('Hola Mundo'),),
+                  Center(child: Text('Hola Mundo'),),
+                  Center(child: Text('Hola Mundo'),),
+                  Center(child: Text('Hola Mundo'),),
+                  Center(child: Text('Hola Mundo'),),
+                  Center(child: Text('Hola Mundo'),),
+                  Center(child: Text('Hola Mundo'),),
+                  Center(child: Text('Hola Mundo'),),
+                  Center(child: Text('Hola Mundo'),),
+                  Center(child: Text('Hola Mundo'),),
+                  Center(child: Text('Hola Mundo'),),
+                  Center(child: Text('Hola Mundo'),),
+                  Center(child: Text('Hola Mundo'),),
+                  Center(child: Text('Hola Mundo'),),
+                  Center(child: Text('Hola Mundo'),),
+                  Center(child: Text('Hola Mundo'),),
+                  Center(child: Text('Hola Mundo'),),
+                  Center(child: Text('Hola Mundo'),),
+                  Center(child: Text('Hola Mundo'),),
+                  Center(child: Text('Hola Mundo'),),
+                  Center(child: Text('Hola Mundo'),),
+                  Center(child: Text('Hola Mundo'),),
+                  Center(child: Text('Hola Mundo'),),
+                  Center(child: Text('Hola Mundo'),),
+                  Center(child: Text('Hola Mundo'),),
+                  Center(child: Text('Hola Mundo'),),
+                  Center(child: Text('Hola Mundo'),),
+                  Center(child: Text('Hola Mundo'),),
+                  Center(child: Text('Hola Mundo'),),
+                  Center(child: Text('Hola Mundo'),),
+                  Center(child: Text('Hola Mundo'),),
+                  Center(child: Text('Hola Mundo'),),
+                  Center(child: Text('Hola Mundo'),),
+                  Center(child: Text('Hola Mundo'),),
+                  Center(child: Text('Hola Mundo'),),
+                  Center(child: Text('Hola Mundo'),),
+                  Center(child: Text('Hola Mundo'),),
+                  Center(child: Text('Hola Mundo'),),
+                  Center(child: Text('Hola final'),),
+
+                ],
+              ),
+
+
+              bottomNavigationBar: Text('Hola mundo end'),
+              endDrawer: SideMenu(),
+            );
+          }
+        }
+
+
+6)

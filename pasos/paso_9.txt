@@ -1,0 +1,65 @@
+ 10 ) agregaremos la funcionalidad del logout en side_menu.dart
+
+
+    footer: SafeArea(
+            top: false,
+            child: Column(
+                mainAxisSize: MainAxisSize.min,
+              children: [
+                Divider(height: 1,),
+                ListTile(
+                  leading: Icon(Icons.logout),
+                  title: Text('Cerrar Sesión'),
+                  onTap: (){
+                    ref.read(authProvider.notifier).logout();
+                    Navigator.pop(context);
+                    context.go('/');
+                  },
+                )
+              ],
+            ),
+
+
+   1 ) vamos a convertir sidemenu a consumerStatfullwidgets
+
+        1.1
+            class SideMenu extends ConsumerStatefulWidget {
+              const SideMenu({super.key});
+              @override
+              SideMenuState createState() => SideMenuState();
+            }
+
+            class SideMenuState extends ConsumerState<SideMenu> {
+
+        1.2
+
+              footer: SafeArea(
+                top: false,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Divider(height: 1,),
+                    ListTile(
+                      leading: Icon(Icons.logout),
+                      title: Text('Cerrar Sesión'),
+                      onTap: (){
+                        Navigator.pop(context);
+                        ref.read(authProvider.notifier).logout();
+                        // context.go('/');
+                      },
+                    )
+                  ],
+                ),
+                  ),
+            }
+
+   2) vamos a reparar el auth_provider.dart
+
+    Future<void> logout([String? errorMessage]) async{
+       await keyValueStorageService.removeKey(Environment.tokenKey);
+       state = AuthState(
+         authStatus: AuthStatus.notAuthenticated,
+         user: null,
+         errorMessage: errorMessage ?? '',
+       );
+     }

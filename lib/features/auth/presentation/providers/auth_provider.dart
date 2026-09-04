@@ -58,9 +58,12 @@ class AuthNotifier extends StateNotifier<AuthState>{
   }
 
   Future<void> logout([String? errorMessage]) async{
-    // Todo: limpiar token
     await keyValueStorageService.removeKey(Environment.tokenKey);
-    state = state.copyWith(authStatus: AuthStatus.notAuthenticated, user:null, errorMessage: errorMessage);
+    state = AuthState(
+      authStatus: AuthStatus.notAuthenticated,
+      user: null,
+      errorMessage: errorMessage ?? '',
+    );
   }
 
   Future<void> _setLoggedUser(User user) async{
@@ -71,6 +74,7 @@ class AuthNotifier extends StateNotifier<AuthState>{
       authStatus: AuthStatus.authenticated,
       errorMessage: '',
     );
+
 
   }
 }

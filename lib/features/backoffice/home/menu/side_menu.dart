@@ -1,15 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:payku_mobile/features/auth/presentation/providers/auth_provider.dart';
 
 import 'menu_items.dart';
 
-class SideMenu extends StatefulWidget {
+class SideMenu extends  ConsumerStatefulWidget {
   const SideMenu({super.key});
   @override
-  State<SideMenu> createState() => _SideMenuState();
+  SideMenuState createState() => SideMenuState();
+
 }
 
-class _SideMenuState extends State<SideMenu> {
+class SideMenuState extends ConsumerState<SideMenu> {
   // int navDrawerIndex = 0;
   @override
   Widget build(BuildContext context) {
@@ -38,7 +41,8 @@ class _SideMenuState extends State<SideMenu> {
               title: Text('Cerrar Sesión'),
               onTap: (){
                 Navigator.pop(context);
-                context.go('/');
+                ref.read(authProvider.notifier).logout();
+                // context.go('/');
               },
             )
           ],
