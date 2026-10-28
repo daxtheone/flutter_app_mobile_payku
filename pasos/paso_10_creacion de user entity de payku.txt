@@ -4,13 +4,20 @@ Vamos a comenzar el listado paginado
 Creamos la estructura de archivos
 
     1) features/backoffice/transactions/entities
+        - transaction.dart
 
     2) features/backoffice/transactions/infrastructure
+        - transactions_repository.dart
 
     3) features/backoffice/transactions/presentation
         3.1) features/backoffice/transactions/providers
+            - transactions_provider.dart
+
         3.2) features/backoffice/transactions/screens
-            - transactions_screen.dart
+            - transactions_screen.dart <- para el listado paginado
+            - transaction_screen.dart <- para el detalle
+            - transaction_card.dart <- el card detallado
+
         3.3) features/backoffice/transactions/widgets
 
 
@@ -20,4 +27,209 @@ Creamos la estructura de archivos
 1) vamos a comenzar con entidad   (https://quicktype.io/)
 
 
+    class Transaction {
+      String identificador;
+      String concepto;
+      /*String estatus;
+      String ordencompra;
+
+      String monto;*/
+      Transaction({
+        required this.identificador,
+        required this.concepto,
+        /*
+        required this.estatus,
+        required this.order,
+
+        required this.monto,
+
+         */
+      });
+    }
+
+    class TransactionMapper {
+      static Transaction jsonToEntity(Map<String, dynamic> json) => Transaction(
+          identificador: json['identificador'],
+          concepto: json['concepto'],
+        /*  estatus: json['estatus'],
+          //price: double.parse(json['price'].toString()),
+          order: json['order'],
+          monto: json['monto'],*/
+      );
+    }
+
+
+2) creamos nuestro llamado al backend en
+            backoffice/transactions/infrastructure/transactions_repository.dart
+
+    class TransactionsRepository {
+
+      final String accessToken;
+      late final Dio dio;
+
+      TransactionsRepository({required this.accessToken}): dio = Dio(BaseOptions(baseUrl: Environment.apiUrl,headers: {
+        'Authorization': 'Bearer $accessToken'
+      }));
+
+
+      Future<List<Transaction>> getTransactionsByPage({int limit = 10, int offset = 0}) async {
+        final response = await dio.get('/users/transactions/transactions-list?limit=$limit&offset=$offset');
+        final List data = response.data['data'] ?? [];
+        final List<Transaction> transactions = [];
+        for (final transaction in data ){
+          transactions.add(TransactionMapper.jsonToEntity(transaction));
+        }
+        return transactions;
+      }
+
+      Future<Transaction> getTransactionsById(String id) async{
+        throw UnimplementedError();
+      }
+
+    }
+
+3) creamos el provider
+             backoffice/transactions/presentation/providers/transactions_presentations.dart
+
+
+                final transactionsProvider1 = Provider<TransactionsRepository>((ref) {
+                  final accessToken = ref.watch(authProvider).user?.token ?? '';
+                  final transactionsRepository = TransactionsRepository(accessToken:accessToken);
+                  return transactionsRepository;
+                });
+
+                // StateNotifierProvider
+
+
+                // 3er paso el provider
+
+                final transactionsProvider2 = StateNotifierProvider<TransactionsNotifier, TransactionsState>((ref){
+                  final transactionsRepository = ref.watch(transactionsProvider1);
+                  return TransactionsNotifier(transactionsRepository: transactionsRepository);
+                });
+
+                // 1 STATE
+                class TransactionsState {
+                  final bool isLastPage;
+                  final int limit;
+                  final int offset;
+                  final bool isLoading;
+                  final List<Transaction> transactions;
+
+                  TransactionsState({
+                    this.isLastPage = false,
+                    this.limit = 10,
+                    this.offset = 0,
+                    this.isLoading = false,
+                    this.transactions = const []
+                  });
+
+                  TransactionsState copyWith({
+                    bool? isLastPage,
+                    int? limit,
+                    int? offset,
+                    bool? isLoading,
+                    List<Transaction>? transactions
+                  }) => TransactionsState(
+                      isLastPage: isLastPage ?? this.isLastPage,
+                      limit: limit ?? this.limit,
+                      offset: offset ?? this.offset,
+                      isLoading: isLoading ?? this.isLoading,
+                      transactions: transactions ?? this.transactions
+                  );
+                }
+
+                // 2 ) Notifier
+
+                class TransactionsNotifier extends StateNotifier<TransactionsState> {
+                  final TransactionsRepository transactionsRepository;
+                  TransactionsNotifier({
+                    required this.transactionsRepository
+                  }):super(TransactionsState()){
+                    loadNextPage();
+                  }
+                  Future loadNextPage() async {
+                    if(state.isLoading || state.isLastPage) return;
+                    state = state.copyWith(
+                        isLoading: true
+                    );
+                    final transactions = await transactionsRepository.getTransactionsByPage(limit: state.limit, offset: state.offset);
+                    if (transactions.isEmpty) {
+                      state = state.copyWith(
+                          isLoading: false,
+                          isLastPage: true
+                      );
+                      return;
+                    }
+                    state = state.copyWith(
+                        isLastPage: false,
+                        isLoading: false,
+                        offset: state.offset + state.limit,
+                        transactions: [...state.transactions, ...transactions]
+                    );
+
+                  }
+                }
+
+
+4) creamos nuestra vista/screens
+                     backoffice/transactions/presentation/screens/transactions_screen.dart
+
+
+            class TransactionsScreen extends ConsumerStatefulWidget {
+              const TransactionsScreen({super.key});
+
+              @override
+              TransactionsScreenState createState() => TransactionsScreenState();
+            }
+
+            class TransactionsScreenState extends ConsumerState<TransactionsScreen> {
+              final ScrollController scrollController = ScrollController();
+              @override
+              void initState() {
+                // TODO: implement initState
+                super.initState();
+                scrollController.addListener(() {
+                  if ((scrollController.position.pixels + 400) >=
+                      scrollController.position.maxScrollExtent) {
+                    ref.read(transactionsProvider2.notifier).loadNextPage();
+                  }
+                });
+              }
+
+              @override
+              void dispose() {
+                // TODO: implement dispose
+                //  scrollController.dispose();
+                super.dispose();
+              }
+
+              @override
+              Widget build(BuildContext context) {
+                final transactionsState = ref.watch(transactionsProvider2);
+
+                return Column(
+                  children: [
+                    SizedBox(height: 100, child: Container()),
+                    Center(child: Text('SCREEEN DE transacciones nuevo')),
+                    Expanded(
+                      child: ListView.builder(
+                        controller: scrollController,
+                        itemCount: transactionsState.transactions.length,
+                        itemBuilder: (context, index) {
+                          final item = transactionsState.transactions[index];
+                          print(item);
+                          return GestureDetector(
+                              onTap: (){
+                                context.push('/product/${item.identificador}');
+                              },
+                              child: TransactionCard(transaction: item));
+                          // return ListTile(key: ValueKey(item.identificador), title: Text(item.order));
+                        },
+                      ),
+                    ),
+                  ],
+                );
+              }
+            }
 

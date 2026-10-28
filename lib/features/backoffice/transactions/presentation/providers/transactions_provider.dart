@@ -33,7 +33,7 @@ class TransactionsState {
 
   TransactionsState({
     this.isLastPage = false,
-    this.limit = 10,
+    this.limit = 20,
     this.offset = 0,
     this.isLoading = false,
     this.transactions = const []
